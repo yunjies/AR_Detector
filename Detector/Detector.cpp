@@ -39,8 +39,15 @@ char* OutputFormatChar(vector<Marker> m, MarkerDetector detector)
 	vector<Transformation> trans = detector.getTransformations();
 	for (int i = 0; i < m.size(); i++)
 	{
+		float x = 0;
+		float y = 0;
+		for (int j = 0; j < 4; j++)
+		{
+			x += m[i].points[j].x;
+			y += m[i].points[j].y;
+		}
 		string res = trans[i].getMat44string();
-		output += (to_string(m[i].id)+ "\t" + res);
+		output += (ToString(m[i].id)+ "\t" + ToString(x / 4) + "\t" + ToString(y / 4) + "\t" + res);
 
 	}
 	char* result = new char[output.length() + 1];
@@ -74,8 +81,11 @@ extern "C" __declspec(dllexport) char* __stdcall GetAllMarkers(unsigned char* co
 	Mat_<float> distCoeff = Mat::zeros(8, 1, CV_64F);
 	vector<Marker> detectedMarkers;
 
-	Mat rawImage(height, width, CV_8UC1, data);
-	Mat src = imdecode(rawImage, CV_LOAD_IMAGE_UNCHANGED);
+	Mat rawImage(height, width, CV_8UC3, data);
+	Mat src(height, width, CV_8UC3, data);
+	//Mat src = imdecode(rawImage, CV_LOAD_IMAGE_UNCHANGED);
+	cvtColor(rawImage, src, 4);
+	flip(src,src,0);
 
 	readCameraParameter(camMatrix, distCoeff, width, height);
 	detector.processFrame(src, camMatrix, distCoeff, detectedMarkers);
